@@ -21,8 +21,8 @@ public class FileController {
         return fileService.imgUpload(file, uuid);
     }
 
-    @GetMapping("/{uuid}")
-    public void getFiles(HttpServletResponse response, @PathVariable String uuid) {
-        fileService.getImg(response, uuid);
-    }
+//    @GetMapping("/{uuid}")
+//    public void getFiles(HttpServletResponse response, @PathVariable String uuid) {
+//        fileService.getImg(response, uuid);
+//    }
 }
