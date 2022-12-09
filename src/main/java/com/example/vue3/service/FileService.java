@@ -2,19 +2,15 @@ package com.example.vue3.service;
 
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.IdUtil;
-import cn.hutool.core.util.StrUtil;
 import com.example.vue3.common.Result;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.net.URLEncoder;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.List;
+import java.util.Arrays;
 import java.util.Objects;
 
 //文件操作
@@ -28,20 +24,66 @@ public class FileService {
     @Value("${ip}")
     private String ip;
 
+    //图片类型
+    private final String[] imgType = {".jpg", ".png", ".gif", ".jpeg"};
+
+    //视频类型
+    private final String[] mp4Type = {".mp4", ".mkv", ".mp3"};
+
     //本地写入
-    public Result<?> imgUpload(MultipartFile file, String uuid) {
+    public Result<?> Upload(MultipartFile file, String nickName) {
         try {
-            //获取目标文件夹路径
-            String target = FileRoot;
+            //设置用户后端资源仓库位置
+            String target = FileRoot + nickName + "/";
             //获取文件后缀
             String type = Objects.requireNonNull(file.getOriginalFilename()).substring(file.getOriginalFilename().lastIndexOf("."));
             //设置文件唯一名称
-            String fileName = uuid + "_" + IdUtil.fastUUID() + type;
+            String fileName = file.getOriginalFilename();
             //设置文件写入路径
-            String rootPath = target + fileName;
+            String rootPath;
+            //判断文件是否为图片
+            if (Arrays.asList(imgType).contains(type)) {
+                //用户文件仓库位置
+                String finalTarget = target + "image/";
+                //创建文件目录
+                Files.createDirectories(Paths.get(finalTarget));
+                //文件目标写入路径
+                rootPath = finalTarget + fileName;
+            } else if (Arrays.asList(mp4Type).contains(type)) {
+                //用户文件仓库位置
+                String finalTarget = target + "mp4/";
+                //创建文件目录
+                Files.createDirectories(Paths.get(finalTarget));
+                //文件目标写入路径
+                rootPath = finalTarget + fileName;
+            } else {
+                //用户文件仓库位置
+                String finalTarget = target + "files/";
+                //创建文件目录
+                Files.createDirectories(Paths.get(finalTarget));
+                //文件目标写入路径
+                rootPath = finalTarget + fileName;
+            }
             //调取工具类写入文件
             FileUtil.writeBytes(file.getBytes(), rootPath);
-            //返回文件浏览路径
+            //返回图片的浏览路径
+            return Result.success("http://" + ip + "/" + fileName);
+        } catch (IOException e) {
+            return Result.error("-1", "上传错误！");
+        }
+    }
+
+    public Result<?> imgUpload(MultipartFile file, String nickName) {
+        try {
+            //获取文件后缀
+            String type = Objects.requireNonNull(file.getOriginalFilename()).substring(file.getOriginalFilename().lastIndexOf("."));
+            //设置文件唯一名称
+            String fileName = IdUtil.fastUUID() + "_" + nickName + type;
+            //文件目标写入路径
+            String rootPath = FileRoot + "image/" + fileName;
+            //调取工具类写入文件
+            FileUtil.writeBytes(file.getBytes(), rootPath);
+            //返回图片的浏览路径
             return Result.success("http://" + ip + "/" + fileName);
         } catch (IOException e) {
             return Result.error("-1", "上传错误！");
